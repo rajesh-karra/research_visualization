@@ -58,3 +58,34 @@ git subtree push --prefix dist origin gh-pages
 Notes:
 - The Vite `base` is already set to `'/research_visualization/'` in `vite.config.ts` so assets resolve correctly when served under `https://<user>.github.io/research_visualization/`.
 - If you prefer, add a small script to automate copying `dist`→`docs` before committing, but the above commands keep control manual.
+
+## Deploy to Render.com (Docker or static site)
+
+Option 1 — Deploy using Docker (recommended):
+
+1. I added a `Dockerfile` that builds the app and serves `dist` with `nginx`.
+
+2. To preview locally with Docker:
+
+```bash
+docker build -t research-visualization:local .
+docker run -p 8080:80 research-visualization:local
+# open http://localhost:8080
+```
+
+3. On Render: create a new "Web Service" and select "Docker" as the environment (or connect your repo and Render will detect the Dockerfile). Render will build the image and serve it.
+
+Option 2 — Deploy as a static site on Render (no Docker):
+
+1. In Render dashboard create a new "Static Site" and connect this GitHub repository.
+2. Set the build command to:
+
+```bash
+npm ci && npm run build
+```
+
+3. Set the publish directory to `dist`.
+
+Notes:
+- `vite.config.ts` now reads `VITE_BASE` environment variable for the `base` path. For Render (site served at root) you should build with `VITE_BASE='/'` (default). For GitHub Pages set `VITE_BASE='/research_visualization/'` when building.
+- Example: `VITE_BASE='/research_visualization/' npm run build` when targeting GitHub Pages.
