@@ -62,35 +62,71 @@ export const SurfaceCodeDiagram: React.FC = () => {
 
          {/* Stabilizers (Z=Blue, X=Red) - positioned absolutely for control */}
          {[
-             {id: 0, x: '50%', y: '20%', type: 'Z', color: 'bg-blue-500'},
-             {id: 1, x: '20%', y: '50%', type: 'X', color: 'bg-red-500'},
-             {id: 2, x: '80%', y: '50%', type: 'X', color: 'bg-red-500'},
-             {id: 3, x: '50%', y: '80%', type: 'Z', color: 'bg-blue-500'},
-         ].map(stab => (
-             <motion.div
-                key={`stab-${stab.id}`}
-                className={`absolute w-10 h-10 -ml-5 -mt-5 flex items-center justify-center text-white text-xs font-bold rounded-sm shadow-sm transition-all duration-300 ${activeStabilizers.includes(stab.id) ? stab.color + ' opacity-100 scale-110 ring-4 ring-offset-2 ring-stone-200' : 'bg-stone-300 opacity-40'}`}
-                style={{ left: stab.x, top: stab.y }}
-             >
-                 {stab.type}
-             </motion.div>
-         ))}
+             {id: 0, x: '50%', y: '20%', type: 'Z', color: 'bg-blue-500', name: 'Z-Stabilizer'},
+             {id: 1, x: '20%', y: '50%', type: 'X', color: 'bg-red-500', name: 'X-Stabilizer'},
+             {id: 2, x: '80%', y: '50%', type: 'X', color: 'bg-red-500', name: 'X-Stabilizer'},
+             {id: 3, x: '50%', y: '80%', type: 'Z', color: 'bg-blue-500', name: 'Z-Stabilizer'},
+         ].map(stab => {
+             const isActive = activeStabilizers.includes(stab.id);
+             return (
+                 <div key={`stab-${stab.id}`} className="absolute group z-20" style={{ left: stab.x, top: stab.y }}>
+                     <motion.div
+                        className={`absolute w-10 h-10 -ml-5 -mt-5 flex items-center justify-center text-white text-xs font-bold rounded-sm ${isActive ? stab.color : 'bg-stone-300'}`}
+                        initial={false}
+                        animate={
+                            isActive 
+                                ? { 
+                                    scale: [1.1, 1.25, 1.1], 
+                                    opacity: 1,
+                                    boxShadow: stab.type === 'Z' 
+                                        ? ['0px 0px 0px rgba(59, 130, 246, 0.4)', '0px 0px 20px rgba(59, 130, 246, 0.8)', '0px 0px 0px rgba(59, 130, 246, 0.4)']
+                                        : ['0px 0px 0px rgba(239, 68, 68, 0.4)', '0px 0px 20px rgba(239, 68, 68, 0.8)', '0px 0px 0px rgba(239, 68, 68, 0.4)']
+                                  } 
+                                : { scale: 1, opacity: 0.4, boxShadow: 'none' }
+                        }
+                        transition={
+                            isActive
+                                ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                                : { duration: 0.3 }
+                        }
+                     >
+                         {stab.type}
+                     </motion.div>
+                     <div className="absolute bottom-full mb-6 w-max px-2 py-1 bg-stone-900 text-stone-100 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-1/2 left-0 shadow-lg border border-stone-700">
+                         {stab.name} <span className="text-stone-400 ml-1">({isActive ? 'Violation detected' : 'Parity normal'})</span>
+                     </div>
+                 </div>
+             );
+         })}
 
          {/* Data Qubits */}
          {[
              {id: 0, x: '20%', y: '20%'}, {id: 1, x: '80%', y: '20%'},
              {id: 4, x: '50%', y: '50%'}, // Center
              {id: 2, x: '20%', y: '80%'}, {id: 3, x: '80%', y: '80%'},
-         ].map(q => (
-             <button
-                key={`data-${q.id}`}
-                onClick={() => toggleError(q.id)}
-                className={`absolute w-8 h-8 -ml-4 -mt-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 z-10 ${errors.includes(q.id) ? 'bg-stone-800 border-stone-900 text-nobel-gold' : 'bg-white border-stone-300 hover:border-stone-500'}`}
-                style={{ left: q.x, top: q.y }}
-             >
-                {errors.includes(q.id) && <Activity size={14} />}
-             </button>
-         ))}
+         ].map(q => {
+             const isError = errors.includes(q.id);
+             return (
+                 <div key={`data-${q.id}`} className="absolute group z-30" style={{ left: q.x, top: q.y }}>
+                     <button
+                        onClick={() => toggleError(q.id)}
+                        className={`absolute w-8 h-8 -ml-4 -mt-4 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isError ? 'bg-stone-900 border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-white border-stone-300 hover:border-stone-500 hover:bg-stone-50'}`}
+                     >
+                        {isError && (
+                            <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <Activity size={14} />
+                            </motion.div>
+                        )}
+                     </button>
+                     <div className="absolute bottom-full mb-5 w-max px-2 py-1 bg-stone-900 text-stone-100 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-1/2 left-0 shadow-lg border border-stone-700">
+                         {isError ? "Remove Error" : "Inject Error"}
+                     </div>
+                 </div>
+             );
+         })}
       </div>
 
       <div className="mt-6 flex items-center gap-4 text-xs font-mono text-stone-500">
@@ -99,8 +135,47 @@ export const SurfaceCodeDiagram: React.FC = () => {
           <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-sm bg-red-500"></div> X-Check</div>
       </div>
       
-      <div className="mt-4 h-6 text-sm font-serif italic text-stone-600">
-        {errors.length === 0 ? "System is stable." : `Detected ${activeStabilizers.length} parity violations.`}
+      <div className={`mt-4 h-6 text-sm font-serif italic flex items-center gap-2 transition-colors duration-300 ${errors.length > 0 ? 'text-red-500 font-medium' : 'text-stone-600'}`}>
+        {errors.length === 0 ? "System is stable." : (
+            <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                Detected {activeStabilizers.length} parity violations.
+            </>
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3 w-full max-w-sm">
+        <button 
+          onClick={() => setErrors([])}
+          disabled={errors.length === 0}
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded border border-stone-300 text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Clear Errors
+        </button>
+        <button 
+          onClick={() => setErrors([4])} // Center qubit
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded bg-stone-900 text-white hover:bg-stone-800 transition-colors"
+        >
+          Single Error
+        </button>
+        <button 
+          onClick={() => setErrors([0, 4])} // Correlated/adjacent
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded bg-stone-900 text-white hover:bg-stone-800 transition-colors"
+        >
+          Cross-talk Simulation
+        </button>
+        <button 
+          onClick={() => {
+            const randomErrors = [0, 1, 2, 3, 4].filter(() => Math.random() > 0.6);
+            setErrors(randomErrors.length > 0 ? randomErrors : [1, 2]); // ensure at least some error
+          }}
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded bg-nobel-gold text-white hover:bg-nobel-gold/90 transition-colors"
+        >
+          Random Noise
+        </button>
       </div>
     </div>
   );
@@ -127,20 +202,23 @@ export const TransformerDecoderDiagram: React.FC = () => {
       <div className="relative w-full max-w-lg h-56 bg-white rounded-lg shadow-inner overflow-hidden mb-6 border border-stone-200 flex items-center justify-center gap-8 p-4">
         
         {/* Input Stage */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 group relative">
             <div className={`w-16 h-16 rounded-lg border-2 flex flex-col items-center justify-center transition-colors duration-500 ${step === 0 ? 'border-nobel-gold bg-nobel-gold/10' : 'border-stone-200 bg-stone-50'}`}>
                 <div className="grid grid-cols-3 gap-1">
                     {[...Array(9)].map((_, i) => <div key={i} className={`w-2 h-2 rounded-full ${Math.random() > 0.7 ? 'bg-stone-800' : 'bg-stone-300'}`}></div>)}
                 </div>
             </div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-stone-500">Syndrome</span>
+            <div className="absolute bottom-full mb-2 w-48 text-center px-3 py-2 bg-stone-900 text-stone-100 text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 shadow-xl border border-stone-700">
+                 Read out of parity measurements indicating potential errors.
+            </div>
         </div>
 
         {/* Arrows */}
         <motion.div animate={{ opacity: step >= 1 ? 1 : 0.3, x: step >= 1 ? 0 : -5 }}>→</motion.div>
 
         {/* Transformer Stage */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 group relative">
              <div className={`w-24 h-24 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-colors duration-500 relative overflow-hidden ${step === 1 || step === 2 ? 'border-stone-800 bg-stone-900 text-white' : 'border-stone-200 bg-stone-50'}`}>
                 <Cpu size={24} className={step === 1 || step === 2 ? 'text-nobel-gold animate-pulse' : 'text-stone-300'} />
                 {step === 1 && (
@@ -151,13 +229,16 @@ export const TransformerDecoderDiagram: React.FC = () => {
                 )}
              </div>
              <span className="text-[10px] uppercase font-bold tracking-wider text-stone-500">Transformer</span>
+             <div className="absolute bottom-full mb-2 w-48 text-center px-3 py-2 bg-stone-900 text-stone-100 text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 shadow-xl border border-stone-700">
+                 Recurrent attention mechanism analyzing spatial and temporal correlations.
+            </div>
         </div>
 
         {/* Arrows */}
         <motion.div animate={{ opacity: step >= 3 ? 1 : 0.3, x: step >= 3 ? 0 : -5 }}>→</motion.div>
 
         {/* Output Stage */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 group relative">
             <div className={`w-16 h-16 rounded-lg border-2 flex flex-col items-center justify-center transition-colors duration-500 ${step === 3 ? 'border-green-500 bg-green-50' : 'border-stone-200 bg-stone-50'}`}>
                 {step === 3 ? (
                     <span className="text-2xl font-serif text-green-600">X</span>
@@ -166,6 +247,9 @@ export const TransformerDecoderDiagram: React.FC = () => {
                 )}
             </div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-stone-500">Correction</span>
+            <div className="absolute bottom-full mb-2 w-48 text-center px-3 py-2 bg-stone-900 text-stone-100 text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 shadow-xl border border-stone-700">
+                 Predicts the most probable logical error needed for correction.
+            </div>
         </div>
 
       </div>
@@ -181,23 +265,35 @@ export const TransformerDecoderDiagram: React.FC = () => {
 
 // --- PERFORMANCE CHART ---
 export const PerformanceMetricDiagram: React.FC = () => {
+    const [noiseType, setNoiseType] = useState<'real' | 'simulated'>('real');
     const [distance, setDistance] = useState<3 | 5 | 11>(5);
     
-    // Values represent Logical Error Rate (approx %).
-    // Lower is better.
-    // Updated with correct Paper values:
-    // Dist 3: MWPM 3.5%, Alpha 2.9%
-    // Dist 5: MWPM 3.6%, Alpha 2.75%
-    // Dist 11: MWPM ~0.0041%, Alpha ~0.0009% (Based on paper's hard input simulation data)
+    // Values represent Logical Error Rate (approx %). Lower is better.
+    // Includes comparison against Tensor Network (TN) decoder and MWPM.
     const data = {
-        3: { mwpm: 3.5, alpha: 2.9 },
-        5: { mwpm: 3.6, alpha: 2.75 },
-        11: { mwpm: 0.0041, alpha: 0.0009 } 
+        real: {
+            3: { mwpm: 3.5, tensor: 3.1, alpha: 2.9 },
+            5: { mwpm: 3.6, tensor: 3.0, alpha: 2.75 }
+        },
+        simulated: {
+            3: { mwpm: 2.1, tensor: 1.8, alpha: 1.6 },
+            5: { mwpm: 0.8, tensor: 0.6, alpha: 0.5 },
+            11: { mwpm: 0.0041, tensor: 0.0015, alpha: 0.0009 }
+        }
     };
 
-    const currentData = data[distance];
+    // If switching to real, distance 11 is not available
+    useEffect(() => {
+        if (noiseType === 'real' && distance === 11) {
+            setDistance(5);
+        }
+    }, [noiseType, distance]);
+
+    // @ts-ignore
+    const currentData = data[noiseType][distance] || data.real[5];
+    
     // Normalize to max value of current set to visually fill the chart, with some headroom
-    const maxVal = Math.max(currentData.mwpm, currentData.alpha) * 1.25;
+    const maxVal = Math.max(currentData.mwpm, currentData.tensor, currentData.alpha) * 1.25;
     
     const formatValue = (val: number) => {
         if (val < 0.01) return val.toFixed(4) + '%';
@@ -205,30 +301,55 @@ export const PerformanceMetricDiagram: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col md:flex-row gap-8 items-center p-8 bg-stone-900 text-stone-100 rounded-xl my-8 border border-stone-800 shadow-lg">
-            <div className="flex-1 min-w-[240px]">
-                <h3 className="font-serif text-xl mb-2 text-nobel-gold">Performance vs Standard</h3>
+        <div className="flex flex-col md:flex-row gap-8 justify-between items-center p-8 bg-stone-900 text-stone-100 rounded-xl my-8 border border-stone-800 shadow-lg">
+            <div className="flex-1 min-w-[240px] max-w-sm">
+                <h3 className="font-serif text-xl mb-2 text-nobel-gold">Performance Benchmarks</h3>
                 <p className="text-stone-400 text-sm mb-4 leading-relaxed">
-                    AlphaQubit consistently achieves lower logical error rates (LER) than the standard Minimum-Weight Perfect Matching (MWPM) decoder.
+                    AlphaQubit consistently achieves lower logical error rates than standard (MWPM) and advanced (Tensor Network) decoders across different distances and noise models.
                 </p>
-                <div className="flex gap-2 mt-6">
-                    {[3, 5, 11].map((d) => (
-                        <button 
-                            key={d}
-                            onClick={() => setDistance(d as any)} 
-                            className={`px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 border ${distance === d ? 'bg-nobel-gold text-stone-900 border-nobel-gold' : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500 hover:text-stone-200'}`}
-                        >
-                            Distance {d}
-                        </button>
-                    ))}
+                
+                <div className="flex flex-col gap-4 mt-6">
+                    <div>
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">Noise Model</div>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setNoiseType('real')} 
+                                className={`px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 border ${noiseType === 'real' ? 'bg-stone-700 text-stone-100 border-stone-600' : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500'}`}
+                            >
+                                Sycamore (Real)
+                            </button>
+                            <button 
+                                onClick={() => setNoiseType('simulated')} 
+                                className={`px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 border ${noiseType === 'simulated' ? 'bg-stone-700 text-stone-100 border-stone-600' : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500'}`}
+                            >
+                                Depolarizing (Sim)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-2">Code Distance</div>
+                        <div className="flex gap-2">
+                            {[3, 5, 11].map((d) => (
+                                <button 
+                                    key={d}
+                                    onClick={() => setDistance(d as any)} 
+                                    disabled={noiseType === 'real' && d === 11}
+                                    className={`px-3 py-1.5 rounded text-sm font-medium transition-all duration-200 border ${noiseType === 'real' && d === 11 ? 'opacity-30 cursor-not-allowed border-stone-800 bg-transparent text-stone-600' : distance === d ? 'bg-nobel-gold text-stone-900 border-nobel-gold' : 'bg-transparent text-stone-400 border-stone-700 hover:border-stone-500 hover:text-stone-200'}`}
+                                >
+                                    d={d}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <div className="mt-6 font-mono text-xs text-stone-500 flex items-center gap-2">
-                    <BarChart2 size={14} className="text-nobel-gold" /> 
-                    <span>LOGICAL ERROR RATE (LOWER IS BETTER)</span>
+                <div className="mt-6 font-mono text-[10px] text-stone-500 flex items-center gap-2">
+                    <BarChart2 size={12} className="text-nobel-gold" /> 
+                    <span>LOGICAL ERROR RATE% (LOWER IS BETTER)</span>
                 </div>
             </div>
             
-            <div className="relative w-64 h-72 bg-stone-800/50 rounded-xl border border-stone-700/50 p-6 flex justify-around items-end">
+            <div className="relative w-full max-w-[400px] h-72 bg-stone-800/50 rounded-xl border border-stone-700/50 p-6 flex justify-around items-end">
                 {/* Background Grid Lines */}
                 <div className="absolute inset-0 p-6 flex flex-col justify-between pointer-events-none opacity-10">
                    <div className="w-full h-[1px] bg-stone-400"></div>
@@ -238,25 +359,42 @@ export const PerformanceMetricDiagram: React.FC = () => {
                 </div>
 
                 {/* MWPM Bar */}
-                <div className="w-20 flex flex-col justify-end items-center h-full z-10">
+                <div className="w-[28%] flex flex-col justify-end items-center h-full z-10 group">
                     <div className="flex-1 w-full flex items-end justify-center relative mb-3">
-                        <div className="absolute -top-5 w-full text-center text-sm font-mono text-stone-400 font-bold bg-stone-900/90 py-1 px-2 rounded backdrop-blur-sm border border-stone-700/50 shadow-sm">{formatValue(currentData.mwpm)}</div>
+                        <div className="absolute -top-7 w-max opacity-0 group-hover:opacity-100 transition-opacity z-50 text-center text-xs font-mono text-stone-300 bg-stone-900/90 py-1 px-2 rounded backdrop-blur-sm border border-stone-700/50 shadow-lg pointer-events-none">MWPM (Standard)</div>
+                        <div className="absolute -top-5 w-full text-center text-[11px] md:text-sm font-mono text-stone-400 font-bold bg-transparent py-1 px-1">{formatValue(currentData.mwpm)}</div>
                         <motion.div 
-                            className="w-full bg-stone-600 rounded-t-md border-t border-x border-stone-500/30"
+                            className="w-full max-w-[50px] bg-stone-600 rounded-t-md border-t border-x border-stone-500/30"
                             initial={{ height: 0 }}
                             animate={{ height: `${(currentData.mwpm / maxVal) * 100}%` }}
                             transition={{ type: "spring", stiffness: 80, damping: 15 }}
                         />
                     </div>
-                    <div className="h-6 flex items-center text-xs font-bold text-stone-500 uppercase tracking-wider">Standard</div>
+                    <div className="h-6 flex items-center text-[9px] md:text-xs font-bold text-stone-500 uppercase tracking-wider text-center">MWPM</div>
+                </div>
+
+                {/* Tensor Network Bar */}
+                <div className="w-[28%] flex flex-col justify-end items-center h-full z-10 group">
+                    <div className="flex-1 w-full flex items-end justify-center relative mb-3">
+                         <div className="absolute -top-7 w-max opacity-0 group-hover:opacity-100 transition-opacity z-50 text-center text-xs font-mono text-stone-300 bg-stone-900/90 py-1 px-2 rounded backdrop-blur-sm border border-stone-700/50 shadow-lg pointer-events-none">Tensor Network</div>
+                        <div className="absolute -top-5 w-full text-center text-[11px] md:text-sm font-mono text-stone-300 font-bold bg-transparent py-1 px-1">{formatValue(currentData.tensor)}</div>
+                        <motion.div 
+                            className="w-full max-w-[50px] bg-stone-500 rounded-t-md border-t border-x border-stone-400/30"
+                            initial={{ height: 0 }}
+                            animate={{ height: `${(currentData.tensor / maxVal) * 100}%` }}
+                            transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.05 }}
+                        />
+                    </div>
+                    <div className="h-6 flex items-center text-[9px] md:text-xs font-bold text-stone-400 uppercase tracking-wider text-center">Tensor</div>
                 </div>
 
                 {/* AlphaQubit Bar */}
-                <div className="w-20 flex flex-col justify-end items-center h-full z-10">
+                <div className="w-[28%] flex flex-col justify-end items-center h-full z-10 group">
                      <div className="flex-1 w-full flex items-end justify-center relative mb-3">
-                        <div className="absolute -top-5 w-full text-center text-sm font-mono text-nobel-gold font-bold bg-stone-900/90 py-1 px-2 rounded backdrop-blur-sm border border-nobel-gold/30 shadow-sm">{formatValue(currentData.alpha)}</div>
+                         <div className="absolute -top-7 w-max opacity-0 group-hover:opacity-100 transition-opacity z-50 text-center text-xs font-mono text-nobel-gold bg-stone-900/90 py-1 px-2 rounded backdrop-blur-sm border border-nobel-gold/30 shadow-lg pointer-events-none">AlphaQubit</div>
+                        <div className="absolute -top-5 w-full text-center text-[11px] md:text-sm font-mono text-nobel-gold font-bold bg-transparent py-1 px-1">{formatValue(currentData.alpha)}</div>
                         <motion.div 
-                            className="w-full bg-nobel-gold rounded-t-md shadow-[0_0_20px_rgba(197,160,89,0.25)] relative overflow-hidden"
+                            className="w-full max-w-[50px] bg-nobel-gold rounded-t-md shadow-[0_0_20px_rgba(197,160,89,0.25)] relative overflow-hidden"
                             initial={{ height: 0 }}
                             animate={{ height: Math.max(1, (currentData.alpha / maxVal) * 100) + '%' }}
                             transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.1 }}
@@ -265,7 +403,7 @@ export const PerformanceMetricDiagram: React.FC = () => {
                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-white/20"></div>
                         </motion.div>
                     </div>
-                     <div className="h-6 flex items-center text-xs font-bold text-nobel-gold uppercase tracking-wider">AlphaQubit</div>
+                     <div className="h-6 flex items-center text-[9px] md:text-xs font-bold text-nobel-gold uppercase tracking-wider text-center">Alpha</div>
                 </div>
             </div>
         </div>

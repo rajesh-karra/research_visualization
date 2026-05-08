@@ -5,6 +5,7 @@
 */
 
 import React, { useState, useEffect } from 'react';
+import { animate } from 'framer-motion';
 import { HeroScene, QuantumComputerScene } from './components/QuantumScene';
 import { SurfaceCodeDiagram, TransformerDecoderDiagram, PerformanceMetricDiagram } from './components/Diagrams';
 import { ArrowDown, Menu, X, BookOpen } from 'lucide-react';
@@ -32,16 +33,28 @@ const App: React.FC = () => {
   const scrollToSection = (id: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     setMenuOpen(false);
+    
+    // For "top" links (e.g. the logo)
+    if (id === 'top') {
+      animate(window.scrollY, 0, {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1], // easeOutExpo
+        onUpdate: (latest) => window.scrollTo(0, latest)
+      });
+      return;
+    }
+
     const element = document.getElementById(id);
     if (element) {
       // Account for fixed header offset
       const headerOffset = 100;
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
+      animate(window.scrollY, offsetPosition, {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1], // easeOutExpo
+        onUpdate: (latest) => window.scrollTo(0, latest)
       });
     }
   };
@@ -52,7 +65,7 @@ const App: React.FC = () => {
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#F9F8F4]/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6'}`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div className="flex items-center gap-4 cursor-pointer" onClick={scrollToSection('top')}>
             <div className="w-8 h-8 bg-nobel-gold rounded-full flex items-center justify-center text-white font-serif font-bold text-xl shadow-sm pb-1">α</div>
             <span className={`font-serif font-bold text-lg tracking-wide transition-opacity ${scrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
               ALPHAQUBIT <span className="font-normal text-stone-500">2024</span>
